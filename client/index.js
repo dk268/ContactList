@@ -1,17 +1,8 @@
 import React, {Component} from 'react'
 import ReactDOM from 'react-dom'
-
-
-
-// const contacts = [
-//   { id: 1, name: "R2-D2", phone: "222-222-2222", email: "r2d2@droids.com" },
-//   { id: 2, name: "C-3PO", phone: "333-333-3333", email: "c3po@droids.com" },
-//   { id: 3, name: "BB-8", phone: "888-888-8888", email: "bb8@droids.com" }
-// ];
-
-
-const ContactList = props =>
-  props.array === this.state.contacts //true
+import ContactList from "./ContactList";
+import ContactRow from "./ContactRow";
+import axios from 'axios';
 
 
 class Main extends Component {
@@ -19,50 +10,69 @@ class Main extends Component {
   constructor(){
     super()
     this.state = {
-      contacts: []
-      // contactById: {}
+      contacts: [],
+      selectedContact: {},
+      singleMode: false,
     }
   }
-  render () {
 
-    // // const contactName = this.state.contacts.map(contact => <td>{contact.name}</td>);
-
-    // return <div id="main">
-    //     <div id="navbar">
-    //       <div>Contact List</div>
-    //     </div>
-    //     <div id="container">
-    //       <table>
-    //         <tbody>
-    //           <ContactList squiggle={this.state.contacts} bomDia="hi" />
-    //       </table>
-    //       {/* <ul>{contactName}</ul> */}
-    //     </div>
-    //   </div>;
+  selectContact = async (contactID) => {
+    let res = await axios.get(`/api/contacts/${contactID}`)
+    this.setState({
+      selectedContact: res.data,
+      singleMode: true
+    })
   }
 
-  componentDidMount = () =>
+  unselectContact = async () => {
+    this.setState({
+      singleMode: false
+    })
+  }
+
+  render () {
+    return (
+    <div id="main">
+        <div id="navbar">
+          <div>Contact List</div>
+        </div>
+        <div id="container">
+          {
+            !this.state.singleMode ?
+            <ContactList contacts = {this.state.contacts} selectContact={this.selectContact} /> :
+            <SingleContact selectedContact={this.state.selectedContact} unselectContact={this.unselectContact}/>
+          }
+        </div>
+    </div>);
+  }
+
+  componentDidMount = async () => {
+    let initialState = await axios.get('/api/contacts')
+    this.setState({contacts: initialState.data});
+  }
 }
+
+class SingleContact extends Component {
+  constructor(props) {
+    super(props)
+    this.props = props;
+  }
+  render() { return (
+    <div id='single-contact'>
+      <img src={this.props.selectedContact.imageUrl} />
+      <div id='contact-info'>
+        <p>Name: {this.props.selectedContact.name}</p>
+        <p>Email: {this.props.selectedContact.email}</p>
+        <p>Phone: {this.props.selectedContact.phone}</p>
+        <button onClick={() => this.props.unselectContact()}>&lt;&lt;</button>
+      </div>
+    </div>
+  )}
+}
+
 ReactDOM.render(
   <Main />,
   document.getElementById('app')
 )
 
-
-export default ContactList
-
-
-=> 1
-=> (
-
-  seventeen
-
-
-
-
-
-
-
-
-
-)
+export default ContactList;
